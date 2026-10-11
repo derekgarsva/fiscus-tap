@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d1d1f"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="nfcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0071e3"/>
+      <stop offset="100%" stop-color="#34c759"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded squircle (Apple icon shape) -->
+  <rect width="512" height="512" rx="115" fill="url(#bg)"/>
+
+  <!-- Subtle inner border highlight -->
+  <rect x="2" y="2" width="508" height="508" rx="113" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="4"/>
+
+  <!-- Minimalist Fiscus 'F' Monogram -->
+  <g transform="translate(130, 130)">
+    <!-- Vertical Stem -->
+    <rect x="0" y="0" width="46" height="252" rx="23" fill="#ffffff"/>
+    
+    <!-- Top Horizontal Bar -->
+    <rect x="0" y="0" width="168" height="46" rx="23" fill="#ffffff"/>
+    
+    <!-- Middle Horizontal Bar -->
+    <rect x="0" y="94" width="126" height="46" rx="23" fill="#ffffff"/>
+
+    <!-- NFC Signal Waves (Right Side) -->
+    <!-- Wave 1 (Small) -->
+    <path d="M 160 110 A 45 45 0 0 1 160 174" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" opacity="0.65"/>
+    
+    <!-- Wave 2 (Medium) -->
+    <path d="M 195 90 A 80 80 0 0 1 195 194" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" opacity="0.85"/>
+    
+    <!-- Wave 3 (Large Accent) -->
+    <path d="M 230 70 A 115 115 0 0 1 230 214" fill="none" stroke="url(#nfcGrad)" stroke-width="22" stroke-linecap="round"/>
+  </g>
+</svg>
