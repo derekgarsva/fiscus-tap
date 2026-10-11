@@ -164,7 +164,7 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/t/sharky"
+            href="/pagar"
             className="group flex flex-col justify-between p-6 rounded-3xl bg-white border border-black/[0.06] text-[#1d1d1f] hover:bg-black/[0.02] active:scale-[0.98] transition-all shadow-apple-card min-h-[160px]"
           >
             <div className="w-12 h-12 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
@@ -183,7 +183,7 @@ export default function HomePage() {
                 Pagar
               </div>
               <div className="text-[13px] text-[#86868b]">
-                1 Toque NFC (Demo)
+                Radar & Escáner
               </div>
             </div>
           </Link>
