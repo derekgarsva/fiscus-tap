@@ -1,12 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { getUserProfile, recordCollection } from '@/lib/wallet-store';
 import { ChargeSession, UserProfile } from '@/types';
 import { isNFCSupported, writeNFCTag } from '@/lib/nfc';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+
+let sharedAudioCtx: AudioContext | null = null;
+
+function unlockAudio(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!sharedAudioCtx) {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+  } catch {}
+  return sharedAudioCtx;
+}
 
 export default function CobrarPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -17,7 +35,14 @@ export default function CobrarPage() {
   const [paidDetails, setPaidDetails] = useState<{ payer: string; ref: string } | null>(null);
   const [nfcWriting, setNfcWriting] = useState(false);
   const [nfcWritten, setNfcWritten] = useState(false);
-  const [viewMode, setViewMode] = useState<'nfc' | 'qr'>('nfc');
+  const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<'qr' | 'nfc'>('qr');
+
+  const sessionRef = useRef<ChargeSession | null>(null);
+  sessionRef.current = session;
+
+  const isPaidRef = useRef(false);
+  isPaidRef.current = isPaid;
 
   useEffect(() => {
     const profile = getUserProfile();
@@ -25,14 +50,14 @@ export default function CobrarPage() {
   }, []);
 
   function handlePaymentReceived(data: { payer_name?: string; reference?: string; bank_code?: string }) {
-    if (isPaid) return;
+    if (isPaidRef.current) return;
     setIsPaid(true);
     setPaidDetails({
       payer: data.payer_name || 'Cliente',
       ref: data.reference || 'FT-REF',
     });
 
-    // Play subtle success sound
+    // Play subtle success chime
     playChime();
 
     // Haptic vibration on supported devices
@@ -41,9 +66,10 @@ export default function CobrarPage() {
     }
 
     // Record in local wallet transactions
-    if (session) {
+    const currentSession = sessionRef.current;
+    if (currentSession) {
       recordCollection(
-        session.amount,
+        currentSession.amount,
         data.payer_name || 'Cliente',
         data.bank_code || 'banesco',
         data.reference || 'FT-REF'
@@ -55,25 +81,24 @@ export default function CobrarPage() {
   useEffect(() => {
     if (!session || isPaid) return;
 
-    // 1. Supabase Realtime WebSocket Channel
     let channel: ReturnType<NonNullable<ReturnType<typeof getSupabase>>['channel']> | null = null;
     const supabase = getSupabase();
 
     if (supabase && isSupabaseConfigured()) {
       try {
         channel = supabase
-          .channel(`charge_${session.id}`)
+          .channel(`charge_channel_${session.id}`)
           .on(
             'postgres_changes',
             {
               event: 'UPDATE',
               schema: 'public',
               table: 'charge_sessions',
-              filter: `id=eq.${session.id}`,
             },
             (payload) => {
-              if (payload.new && (payload.new as ChargeSession).status === 'paid') {
-                handlePaymentReceived(payload.new as ChargeSession);
+              const row = payload.new as ChargeSession;
+              if (row && row.id === session.id && row.status === 'paid') {
+                handlePaymentReceived(row);
               }
             }
           )
@@ -83,19 +108,19 @@ export default function CobrarPage() {
       }
     }
 
-    // 2. Resilient Polling Fallback (1.5s interval)
+    // Resilient 1-second Polling Fallback
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/charges/${session.id}`);
         if (!res.ok) return;
         const data: ChargeSession = await res.json();
 
-        if (data.status === 'paid') {
+        if (data && data.status === 'paid') {
           handlePaymentReceived(data);
           clearInterval(interval);
         }
       } catch {}
-    }, 1500);
+    }, 1000);
 
     return () => {
       clearInterval(interval);
@@ -107,7 +132,8 @@ export default function CobrarPage() {
 
   function playChime() {
     try {
-      const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const audioCtx = unlockAudio();
+      if (!audioCtx) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
@@ -135,6 +161,7 @@ export default function CobrarPage() {
 
   async function handleStartCharge() {
     if (numericAmount <= 0) return;
+    unlockAudio();
     setIsCreating(true);
 
     try {
@@ -151,7 +178,7 @@ export default function CobrarPage() {
       if (!res.ok) throw new Error('Error al crear cobro');
       const data: ChargeSession = await res.json();
       setSession(data);
-    } catch (err) {
+    } catch {
       alert('No se pudo iniciar la sesión de cobro.');
     } finally {
       setIsCreating(false);
@@ -171,16 +198,26 @@ export default function CobrarPage() {
     }
   }
 
+  function copyPayLink() {
+    if (!payUrl) return;
+    navigator.clipboard.writeText(payUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   function resetCharge() {
     setSession(null);
     setIsPaid(false);
     setPaidDetails(null);
     setAmountStr('');
     setNfcWritten(false);
-    setViewMode('nfc');
+    setViewMode('qr');
   }
 
-  const payUrl = session ? `${typeof window !== 'undefined' ? window.location.origin : ''}/t/${session.id}` : '';
+  const payUrl = session
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/t/${session.id}`
+    : '';
 
   return (
     <main className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f] flex flex-col justify-between py-10 px-6 max-w-md mx-auto">
@@ -209,7 +246,9 @@ export default function CobrarPage() {
             <div className="flex items-center justify-center gap-1">
               <span className="text-2xl font-semibold text-[#86868b]">Bs.</span>
               <span className="text-5xl font-bold tracking-[-0.03em] font-mono text-[#1d1d1f]">
-                {numericAmount > 0 ? numericAmount.toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '0,00'}
+                {numericAmount > 0
+                  ? numericAmount.toLocaleString('es-VE', { minimumFractionDigits: 2 })
+                  : '0,00'}
               </span>
             </div>
           </div>
@@ -266,7 +305,7 @@ export default function CobrarPage() {
             {isCreating ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              'Cobrar con Tap NFC'
+              'Cobrar con Terminal'
             )}
           </button>
         </div>
@@ -274,20 +313,20 @@ export default function CobrarPage() {
 
       {/* STATE 2: ACTIVE CHARGE WAITING FOR TAP OR QR */}
       {session && !isPaid && (
-        <div className="py-6 space-y-6 text-center animate-fadeIn">
-          {/* Mode Selector Pill: NFC vs QR */}
+        <div className="py-4 space-y-5 text-center animate-fadeIn">
+          {/* Amount Display */}
+          <div className="space-y-1">
+            <span className="text-[12px] font-semibold text-[#0071e3] uppercase tracking-[0.08em]">
+              Esperando Pago en Vivo
+            </span>
+            <div className="text-4xl font-bold tracking-[-0.03em] font-mono text-[#1d1d1f]">
+              Bs. {session.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-[13px] text-[#86868b]">{session.merchant_name}</p>
+          </div>
+
+          {/* Mode Selector Pill: QR vs Tag NFC */}
           <div className="inline-flex p-1 rounded-2xl bg-black/[0.05] border border-black/[0.04]">
-            <button
-              type="button"
-              onClick={() => setViewMode('nfc')}
-              className={`px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all ${
-                viewMode === 'nfc'
-                  ? 'bg-white text-[#1d1d1f] shadow-sm'
-                  : 'text-[#86868b] hover:text-[#1d1d1f]'
-              }`}
-            >
-              📱 Tap NFC
-            </button>
             <button
               type="button"
               onClick={() => setViewMode('qr')}
@@ -297,30 +336,53 @@ export default function CobrarPage() {
                   : 'text-[#86868b] hover:text-[#1d1d1f]'
               }`}
             >
-              📷 Código QR
+              📷 Código QR Dinámico
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('nfc')}
+              className={`px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all ${
+                viewMode === 'nfc'
+                  ? 'bg-white text-[#1d1d1f] shadow-sm'
+                  : 'text-[#86868b] hover:text-[#1d1d1f]'
+              }`}
+            >
+              📱 Tag NFC Físico
             </button>
           </div>
 
-          {viewMode === 'nfc' ? (
-            <div className="space-y-6">
-              {/* Amount Display */}
-              <div className="space-y-1">
-                <span className="text-[13px] font-medium text-[#86868b] uppercase tracking-[0.08em]">
-                  Esperando Pago
-                </span>
-                <div className="text-4xl font-bold tracking-[-0.03em] font-mono text-[#1d1d1f]">
-                  Bs. {session.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
-                </div>
-                <p className="text-[13px] text-[#86868b]">{session.merchant_name}</p>
-              </div>
+          {viewMode === 'qr' ? (
+            <div className="space-y-4">
+              {/* Dynamic Local QR Code */}
+              <QRCodeDisplay url={payUrl} amount={session.amount} />
 
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={copyPayLink}
+                  className="flex-1 py-3 px-4 rounded-2xl bg-white border border-black/[0.08] text-[13px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] shadow-sm transition-all"
+                >
+                  {copied ? '✓ ¡Enlace Copiado!' : 'Copiar Enlace de Pago'}
+                </button>
+                <a
+                  href={payUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-3 px-4 rounded-2xl bg-white border border-black/[0.08] text-[13px] font-medium text-[#0071e3] hover:bg-black/[0.02] shadow-sm transition-all flex items-center justify-center"
+                >
+                  Abrir ↗
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-5">
               {/* Animated Apple NFC Radar */}
-              <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+              <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-[#0071e3]/5 animate-ping duration-1000" />
-                <div className="absolute inset-4 rounded-full bg-[#0071e3]/10 animate-apple-pulse" />
-                <div className="relative w-28 h-28 rounded-full bg-white border border-black/[0.06] shadow-apple-card flex flex-col items-center justify-center gap-1">
+                <div className="absolute inset-3 rounded-full bg-[#0071e3]/10 animate-apple-pulse" />
+                <div className="relative w-24 h-24 rounded-full bg-white border border-black/[0.06] shadow-apple-card flex flex-col items-center justify-center gap-1">
                   <svg
-                    className="w-8 h-8 text-[#0071e3]"
+                    className="w-7 h-7 text-[#0071e3]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -331,54 +393,48 @@ export default function CobrarPage() {
                     <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                     <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                   </svg>
-                  <span className="text-[11px] font-medium tracking-tight text-[#86868b]">
-                    Acerca el celular
+                  <span className="text-[10px] font-medium tracking-tight text-[#86868b]">
+                    Tag NFC
                   </span>
                 </div>
               </div>
 
-              {/* Instructions */}
               <div className="p-4 rounded-2xl bg-white border border-black/[0.06] space-y-2 text-left shadow-apple-sm">
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-[#86868b]">Enlace de este cobro:</span>
-                  <a
-                    href={payUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[#0071e3] font-medium hover:underline text-[12px]"
-                  >
-                    Abrir en este teléfono ↗
-                  </a>
-                </div>
-                <div className="text-[11px] text-[#86868b] break-all font-mono bg-[#f5f5f7] p-2 rounded-lg">
-                  {payUrl}
-                </div>
+                <span className="text-[12px] font-semibold text-[#1d1d1f]">
+                  ¿Cómo usar NFC físico?
+                </span>
+                <p className="text-[12px] text-[#86868b] leading-relaxed">
+                  Para cobrar por NFC físico, acerca una tarjeta o sticker NFC (NTAG213/215) a la
+                  parte trasera de este teléfono y pulsa el botón abajo. Una vez grabado, cualquier
+                  iPhone podrá pagar con solo acercarse al sticker.
+                </p>
               </div>
 
-              {/* NFC Hardware button if Web NFC is supported */}
-              {isNFCSupported() && (
+              {isNFCSupported() ? (
                 <button
                   type="button"
                   onClick={handleWriteTag}
                   disabled={nfcWriting || nfcWritten}
-                  className="w-full py-3 rounded-2xl border border-black/[0.08] text-[14px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] transition-colors"
+                  className="w-full py-3.5 rounded-2xl bg-[#1d1d1f] text-white text-[14px] font-medium hover:bg-black active:scale-[0.99] transition-all shadow-sm"
                 >
                   {nfcWriting
-                    ? 'Acerca sticker NFC para grabar...'
+                    ? 'Acerca sticker NFC al celular...'
                     : nfcWritten
-                    ? '✓ Grabado en Sticker NFC'
-                    : 'Escribir enlace en Tag NFC físico'}
+                    ? '✓ Enlace grabado en Tag NFC'
+                    : 'Grabar este cobro en Tag NFC físico'}
                 </button>
+              ) : (
+                <p className="text-[12px] text-[#86868b]">
+                  Web NFC disponible en Chrome para Android.
+                </p>
               )}
             </div>
-          ) : (
-            <QRCodeDisplay url={payUrl} amount={session.amount} />
           )}
 
           <button
             type="button"
             onClick={resetCharge}
-            className="text-[14px] text-[#86868b] hover:text-[#1d1d1f] transition-colors"
+            className="text-[13px] text-[#86868b] hover:text-[#1d1d1f] transition-colors pt-2 block mx-auto"
           >
             Cancelar cobro
           </button>
@@ -407,9 +463,7 @@ export default function CobrarPage() {
             <div className="text-4xl font-bold tracking-[-0.03em] font-mono text-[#1d1d1f]">
               Bs. {session?.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-[14px] text-[#86868b]">
-              Recibido de {paidDetails.payer}
-            </p>
+            <p className="text-[14px] text-[#86868b]">Recibido de {paidDetails.payer}</p>
           </div>
 
           {/* Receipt details */}
