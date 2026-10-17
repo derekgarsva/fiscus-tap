@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ChargeSession } from '@/types';
 import { getSupabase } from '@/lib/supabase';
+import { generateBankingReference } from '@/lib/banking-reference';
 
 const globalForCharges = globalThis as unknown as {
   fiscusCharges?: Map<string, ChargeSession>;
@@ -56,26 +57,58 @@ export async function POST(
   try {
     const { id } = params;
     const body = await request.json();
-    const { bank_code, payer_name, reference } = body;
+    const { bank_code, payer_name, payer_phone, reference } = body;
+
+    const local = chargesStore.get(id);
+    const amount = local?.amount || body.amount || 150.00;
+    const effectiveBankCode = bank_code || 'banesco';
+    const effectivePhone = payer_phone || '04149876543';
+
+    // Generate compliant SUDEBAN reference if not supplied
+    const finalRef = reference || generateBankingReference({
+      bankCode: effectiveBankCode,
+      sessionId: id,
+      payerPhone: effectivePhone,
+      amount,
+    });
 
     const paidSession: Partial<ChargeSession> = {
       status: 'paid',
       paid_at: new Date().toISOString(),
-      bank_code: bank_code || 'banesco',
+      bank_code: effectiveBankCode,
       payer_name: payer_name || 'Cliente',
-      reference: reference || `FT-${Date.now().toString(36).toUpperCase()}`,
+      reference: finalRef,
     };
 
     // 1. Update in-memory fallback
-    const local = chargesStore.get(id);
     if (local) {
       Object.assign(local, paidSession);
     }
 
-    // 2. Update Supabase (triggers Realtime WebSocket event to merchant)
+    // 2. Execute Atomic Settlement in Supabase if configured
     const supabase = getSupabase();
     if (supabase) {
       try {
+        // Attempt atomic RPC execute_tap_transfer first
+        const { data: rpcData, error: rpcError } = await supabase.rpc('execute_tap_transfer', {
+          p_session_id: id,
+          p_payer_phone: effectivePhone,
+          p_reference: finalRef,
+          p_bank_code: effectiveBankCode,
+        });
+
+        if (rpcData && !rpcError) {
+          return NextResponse.json({
+            id,
+            merchant_name: local?.merchant_name || 'Comercio Fiscus',
+            amount,
+            currency: 'VES',
+            ...paidSession,
+            ledgerResult: rpcData,
+          });
+        }
+
+        // Direct table update fallback if RPC function not yet created in remote DB
         const { data, error } = await supabase
           .from('charge_sessions')
           .update(paidSession)
@@ -94,7 +127,7 @@ export async function POST(
     return NextResponse.json({
       id,
       merchant_name: local?.merchant_name || 'Comercio Fiscus',
-      amount: local?.amount || 150.00,
+      amount,
       currency: 'VES',
       ...paidSession,
     });

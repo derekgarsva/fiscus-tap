@@ -1,0 +1,54 @@
+name: Build iOS (Fiscus Tap)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Sync Capacitor iOS Platform
+        run: npx cap sync ios
+
+      - name: Build Native iOS App (Xcode)
+        run: |
+          cd ios/App
+          pod install
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+          
+          cd build/Build/Products/Release-iphoneos
+          mkdir -p Payload
+          cp -r App.app Payload/
+          zip -r fiscus-tap-ios.ipa Payload
+
+      - name: Package .ipa and .app as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fiscus-tap-ios-build
+          path: |
+            ios/App/build/Build/Products/Release-iphoneos/fiscus-tap-ios.ipa
+            ios/App/build/Build/Products/Release-iphoneos/App.app

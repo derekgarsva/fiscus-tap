@@ -29,3 +29,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# mobile & build artifacts
+jdk17/
+*.apk
+*.aab
+*.ipa
+temp_android_backup_src/
+.agents/
+android/.gradle/
+android/app/build/
+android/build/
+ios/App/build/
+ios/App/Pods/
+

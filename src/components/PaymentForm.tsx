@@ -100,18 +100,6 @@ export function PaymentForm({
       // Record in local wallet store
       recordPayment(amount, merchant.name, bankCode, result.reference || 'FT-REF');
 
-      // Update API charge session if available
-      try {
-        await fetch(`/api/charges/${merchant.slug}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bank_code: bankCode,
-            payer_name: formData.holder_name || 'Cliente',
-            reference: result.reference,
-          }),
-        });
-      } catch {}
 
       onComplete({ ...result, merchant_name: merchant.name });
     } catch (err) {

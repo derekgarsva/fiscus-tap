@@ -12,6 +12,9 @@ import { UserProfile, WalletTransaction } from '@/types';
 import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { DepositModal } from '@/components/DepositModal';
 import { WithdrawModal } from '@/components/WithdrawModal';
+import { BankCardsModal } from '@/components/BankCardsModal';
+import { SettingsModal } from '@/components/SettingsModal';
+import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { getBankByCode } from '@/config/banks';
 
 export default function HomePage() {
@@ -23,9 +26,33 @@ export default function HomePage() {
   // Modals
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [cardsOpen, setCardsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
 
   useEffect(() => {
     loadWalletData();
+
+    const handleRefresh = () => {
+      loadWalletData();
+    };
+
+    window.addEventListener('focus', handleRefresh);
+    window.addEventListener('pageshow', handleRefresh);
+    window.addEventListener('storage', handleRefresh);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        handleRefresh();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('focus', handleRefresh);
+      window.removeEventListener('pageshow', handleRefresh);
+      window.removeEventListener('storage', handleRefresh);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   function loadWalletData() {
@@ -89,20 +116,33 @@ export default function HomePage() {
           >
             Reiniciar
           </button>
-          <div className="w-9 h-9 rounded-full bg-black/[0.05] border border-black/[0.06] flex items-center justify-center text-sm font-semibold text-[#1d1d1f]">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            title="Ajustes, Perfil y Soporte"
+            className="w-9 h-9 rounded-full bg-black/[0.05] border border-black/[0.06] flex items-center justify-center text-sm font-semibold text-[#1d1d1f] hover:bg-black/[0.1] active:scale-95 transition-all cursor-pointer"
+          >
             {profile.name.charAt(0).toUpperCase()}
-          </div>
+          </button>
         </div>
       </header>
 
       {/* Main Wallet Content */}
       <div className="space-y-8 py-2">
-        {/* Apple Card Component */}
-        <div className="relative overflow-hidden rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-6">
+        {/* Apple Card Component (Tap to manage bank cards) */}
+        <div
+          onClick={() => setCardsOpen(true)}
+          role="button"
+          tabIndex={0}
+          className="relative overflow-hidden rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-6 cursor-pointer hover:border-[#0071e3]/40 active:scale-[0.99] transition-all group"
+        >
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[12px] font-medium tracking-[0.08em] text-[#86868b] uppercase">
-                Saldo Disponible
+              <span className="text-[12px] font-medium tracking-[0.08em] text-[#86868b] uppercase flex items-center gap-1.5">
+                <span>Saldo Disponible</span>
+                <span className="text-[10px] text-[#0071e3] font-semibold bg-[#0071e3]/10 px-2 py-0.5 rounded-full">
+                  Cambiar Banco ▾
+                </span>
               </span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xl font-medium text-[#86868b]">Bs.</span>
@@ -117,12 +157,15 @@ export default function HomePage() {
 
             {/* Linked Bank Badge */}
             <div className="text-right space-y-1">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5f5f7] border border-black/[0.04] text-[12px] font-medium text-[#1d1d1f]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5f5f7] border border-black/[0.04] text-[12px] font-medium text-[#1d1d1f] group-hover:bg-[#0071e3]/10 group-hover:text-[#0071e3] transition-colors">
                 <span
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: defaultBank?.color || '#00A651' }}
                 />
                 {defaultBank?.short_name || 'Banesco'}
+                <svg className="w-3.5 h-3.5 text-[#86868b] group-hover:text-[#0071e3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </span>
               <div className="text-[11px] text-[#86868b] font-mono">
                 {profile.phone}
@@ -130,9 +173,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-between text-[13px] border-t border-black/[0.04] text-[#86868b]">
-            <span>{profile.name}</span>
-            <span className="font-mono">{profile.document_type}-{profile.document_number}</span>
+          <div className="pt-2 flex items-center justify-between text-[12px] border-t border-black/[0.04] text-[#86868b]">
+            <span className="font-medium text-[#1d1d1f]">{profile.name}</span>
+            <span className="text-[#0071e3] font-medium group-hover:underline flex items-center gap-1">
+              Ver tarjetas bancarias ›
+            </span>
           </div>
         </div>
 
@@ -229,7 +274,10 @@ export default function HomePage() {
                 return (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-white border border-black/[0.04] shadow-apple-sm transition-all"
+                    onClick={() => setSelectedTx(tx)}
+                    role="button"
+                    tabIndex={0}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-white border border-black/[0.04] shadow-apple-sm hover:border-[#0071e3]/30 hover:shadow-apple-card active:scale-[0.99] transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3.5">
                       <div
@@ -242,7 +290,7 @@ export default function HomePage() {
                         {isPositive ? '↓' : '↑'}
                       </div>
                       <div>
-                        <div className="font-medium text-[15px] tracking-[-0.01em] text-[#1d1d1f]">
+                        <div className="font-medium text-[15px] tracking-[-0.01em] text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">
                           {tx.title}
                         </div>
                         <div className="text-[12px] text-[#86868b]">
@@ -298,6 +346,35 @@ export default function HomePage() {
           setBalance(newBal);
           setTransactions(getTransactions());
         }}
+      />
+
+      {/* Bank Cards Modal */}
+      <BankCardsModal
+        isOpen={cardsOpen}
+        onClose={() => setCardsOpen(false)}
+        currentUser={profile}
+        onProfileUpdated={(updated) => {
+          setProfile(updated);
+          loadWalletData();
+        }}
+      />
+
+      {/* Settings & Support Modal */}
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        user={profile}
+        onProfileUpdated={(updated) => {
+          setProfile(updated);
+          loadWalletData();
+        }}
+      />
+
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        isOpen={!!selectedTx}
+        onClose={() => setSelectedTx(null)}
+        transaction={selectedTx}
       />
     </main>
   );

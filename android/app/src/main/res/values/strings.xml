@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fiscus Tap</string>
+    <string name="title_activity_main">Fiscus Tap</string>
+    <string name="package_name">com.fiscus.tap</string>
+    <string name="custom_url_scheme">com.fiscus.tap</string>
+    <string name="hce_service_description">Fiscus Tap NFC Payment Terminal</string>
+    <string name="fiscus_p2p_aid_group">Fiscus Tap P2P Transfer</string>
+</resources>
