@@ -62,3 +62,13 @@ body {
 .animate-apple-pulse {
   animation: applePulse 2.4s ease-in-out infinite;
 }
+
+/* Mobile Safe-Area Utilities */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+

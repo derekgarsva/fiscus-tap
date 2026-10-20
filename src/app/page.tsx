@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { tactileSpring } from '@/lib/motion-config';
 import {
   getUserProfile,
   getWalletBalance,
@@ -116,25 +118,29 @@ export default function HomePage() {
           >
             Reiniciar
           </button>
-          <button
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            transition={tactileSpring}
             type="button"
             onClick={() => setSettingsOpen(true)}
             title="Ajustes, Perfil y Soporte"
-            className="w-9 h-9 rounded-full bg-black/[0.05] border border-black/[0.06] flex items-center justify-center text-sm font-semibold text-[#1d1d1f] hover:bg-black/[0.1] active:scale-95 transition-all cursor-pointer"
+            className="w-9 h-9 rounded-full bg-black/[0.05] border border-black/[0.06] flex items-center justify-center text-sm font-semibold text-[#1d1d1f] hover:bg-black/[0.1] transition-all cursor-pointer"
           >
             {profile.name.charAt(0).toUpperCase()}
-          </button>
+          </motion.button>
         </div>
       </header>
 
       {/* Main Wallet Content */}
       <div className="space-y-8 py-2">
         {/* Apple Card Component (Tap to manage bank cards) */}
-        <div
+        <motion.div
+          whileTap={{ scale: 0.98 }}
+          transition={tactileSpring}
           onClick={() => setCardsOpen(true)}
           role="button"
           tabIndex={0}
-          className="relative overflow-hidden rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-6 cursor-pointer hover:border-[#0071e3]/40 active:scale-[0.99] transition-all group"
+          className="relative overflow-hidden rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-6 cursor-pointer hover:border-[#0071e3]/40 transition-all group"
         >
           <div className="flex items-start justify-between">
             <div className="space-y-1">
@@ -179,79 +185,87 @@ export default function HomePage() {
               Ver tarjetas bancarias ›
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Hero Actions: COBRAR and PAGAR with generous negative space */}
         <div className="grid grid-cols-2 gap-4">
-          <Link
-            href="/cobrar"
-            className="group flex flex-col justify-between p-6 rounded-3xl bg-[#1d1d1f] text-white hover:bg-black active:scale-[0.98] transition-all shadow-apple-card min-h-[160px]"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <div>
-              <div className="font-semibold text-lg tracking-[-0.022em]">
-                Cobrar
+          <motion.div whileTap={{ scale: 0.96 }} transition={tactileSpring} className="h-full">
+            <Link
+              href="/cobrar"
+              className="group flex flex-col justify-between p-6 rounded-3xl bg-[#1d1d1f] text-white hover:bg-black transition-all shadow-apple-card min-h-[160px] h-full"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
               </div>
-              <div className="text-[13px] text-white/60">
-                Modo Terminal POS
+              <div>
+                <div className="font-semibold text-lg tracking-[-0.022em]">
+                  Cobrar
+                </div>
+                <div className="text-[13px] text-white/60">
+                  Modo Terminal POS
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </motion.div>
 
-          <Link
-            href="/pagar"
-            className="group flex flex-col justify-between p-6 rounded-3xl bg-white border border-black/[0.06] text-[#1d1d1f] hover:bg-black/[0.02] active:scale-[0.98] transition-all shadow-apple-card min-h-[160px]"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
-              <svg
-                className="w-6 h-6 text-[#0071e3]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <div className="font-semibold text-lg tracking-[-0.022em]">
-                Pagar
+          <motion.div whileTap={{ scale: 0.96 }} transition={tactileSpring} className="h-full">
+            <Link
+              href="/pagar"
+              className="group flex flex-col justify-between p-6 rounded-3xl bg-white border border-black/[0.06] text-[#1d1d1f] hover:bg-black/[0.02] transition-all shadow-apple-card min-h-[160px] h-full"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
+                <svg
+                  className="w-6 h-6 text-[#0071e3]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              <div className="text-[13px] text-[#86868b]">
-                Radar & Escáner
+              <div>
+                <div className="font-semibold text-lg tracking-[-0.022em]">
+                  Pagar
+                </div>
+                <div className="text-[13px] text-[#86868b]">
+                  Radar & Escáner
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </motion.div>
         </div>
 
         {/* Quick Action Pills: Ingresar / Retirar */}
         <div className="flex gap-3">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            transition={tactileSpring}
             type="button"
             onClick={() => setDepositOpen(true)}
-            className="flex-1 py-3.5 px-4 rounded-2xl bg-white border border-black/[0.06] text-[14px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 px-4 rounded-2xl bg-white border border-black/[0.06] text-[14px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] transition-all shadow-sm flex items-center justify-center gap-2"
           >
             <span className="text-[#34c759] font-bold text-lg">+</span>
             <span>Ingresar Fondos</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            transition={tactileSpring}
             type="button"
             onClick={() => setWithdrawOpen(true)}
-            className="flex-1 py-3.5 px-4 rounded-2xl bg-white border border-black/[0.06] text-[14px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 px-4 rounded-2xl bg-white border border-black/[0.06] text-[14px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] transition-all shadow-sm flex items-center justify-center gap-2"
           >
             <span className="text-[#0071e3] font-bold text-lg">↑</span>
             <span>Retirar a mi Banco</span>
-          </button>
+          </motion.button>
         </div>
 
         {/* Recent Transactions Section */}
@@ -272,12 +286,14 @@ export default function HomePage() {
               transactions.slice(0, 5).map((tx) => {
                 const isPositive = tx.type === 'deposit' || tx.type === 'payment_received';
                 return (
-                  <div
+                  <motion.div
                     key={tx.id}
+                    whileTap={{ scale: 0.98 }}
+                    transition={tactileSpring}
                     onClick={() => setSelectedTx(tx)}
                     role="button"
                     tabIndex={0}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-white border border-black/[0.04] shadow-apple-sm hover:border-[#0071e3]/30 hover:shadow-apple-card active:scale-[0.99] transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-4 rounded-2xl bg-white border border-black/[0.04] shadow-apple-sm hover:border-[#0071e3]/30 hover:shadow-apple-card transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3.5">
                       <div
@@ -311,7 +327,7 @@ export default function HomePage() {
                         {tx.reference.substring(0, 10)}...
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             )}

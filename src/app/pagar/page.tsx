@@ -8,6 +8,13 @@ import { generateBankingReference } from '@/lib/banking-reference';
 import { useNfcReader, FiscusNfcBridge, type TagDiscoveredEvent } from '@/lib/nfc-bridge';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Receipt } from '@/components/Receipt';
+import { motion } from 'framer-motion';
+import {
+  triumphantSpring,
+  receiptCardVariants,
+  receiptItemVariants,
+  tactileSpring,
+} from '@/lib/motion-config';
 
 export default function PagarPage() {
   const router = useRouter();
@@ -322,11 +329,13 @@ export default function PagarPage() {
             )}
 
             {/* 1-Touch Action Button */}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={tactileSpring}
               type="button"
               disabled={isProcessing}
               onClick={() => executePayment()}
-              className="w-full py-4 rounded-2xl bg-[#1d1d1f] text-white font-semibold text-[16px] hover:bg-black active:scale-[0.98] transition-all shadow-[0_4px_14px_rgba(0,0,0,0.12)] flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-[#1d1d1f] text-white font-semibold text-[16px] hover:bg-black transition-all shadow-[0_4px_14px_rgba(0,0,0,0.12)] flex items-center justify-center gap-2 cursor-pointer"
             >
               {isProcessing ? (
                 <>
@@ -336,7 +345,7 @@ export default function PagarPage() {
               ) : (
                 'PAGAR CON 1 TOQUE'
               )}
-            </button>
+            </motion.button>
 
             <button
               type="button"
@@ -357,9 +366,25 @@ export default function PagarPage() {
           <div className="py-6 space-y-6 text-center animate-fadeIn">
             {/* Pulsing Contactless Waves Animation */}
             <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-[#0071e3]/10 animate-ping duration-1000" />
-              <div className="absolute inset-4 rounded-full bg-[#0071e3]/15 animate-pulse" />
-              <div className="absolute inset-8 rounded-full bg-[#0071e3]/20" />
+              {/* 3 Concentric Staggered Ripple Rings */}
+              {[0, 1, 2].map((index) => (
+                <motion.div
+                  key={index}
+                  className="absolute inset-0 rounded-full border-2 border-[#0071e3]/30 bg-[#0071e3]/10"
+                  initial={{ scale: 0.8, opacity: 0.7 }}
+                  animate={{
+                    scale: [0.8, 1.45, 2.0],
+                    opacity: [0.7, 0.3, 0],
+                  }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                    delay: index * 0.5,
+                    ease: 'easeOut',
+                  }}
+                  style={{ willChange: 'transform, opacity' }}
+                />
+              ))}
 
               {/* Central Phone Tap Icon */}
               <div className="relative w-28 h-28 rounded-full bg-white border border-black/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col items-center justify-center gap-1.5 z-10">
@@ -404,18 +429,20 @@ export default function PagarPage() {
             </div>
 
             <div className="space-y-3 max-w-xs mx-auto pt-2">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                transition={tactileSpring}
                 type="button"
                 disabled={simulatingReaderTap}
                 onClick={handleSimulateTerminalTouch}
-                className="w-full py-3.5 rounded-2xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-[0.99] text-[#1d1d1f] font-semibold text-[14px] transition-all shadow-sm flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] font-semibold text-[14px] transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 {simulatingReaderTap ? (
                   <div className="w-4 h-4 border-2 border-[#1d1d1f] border-t-transparent rounded-full animate-spin" />
                 ) : (
                   '⚡ Simular toque a terminal (Demostración)'
                 )}
-              </button>
+              </motion.button>
 
               <label className="flex items-center justify-center gap-2 text-[12px] text-[#86868b] cursor-pointer pt-1">
                 <input
@@ -433,11 +460,25 @@ export default function PagarPage() {
         {/* STATE 3: PAYMENT CONFIRMED (SUCCESS RECEIPT) */}
         {paidResult && (
           <div className="space-y-6 text-center animate-fadeIn py-4">
-            <div className="w-20 h-20 mx-auto rounded-full bg-[#34c759]/10 border border-[#34c759]/20 flex items-center justify-center text-[#34c759] shadow-sm">
-              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <motion.div
+              className="w-20 h-20 mx-auto rounded-full bg-[#34c759]/10 border border-[#34c759]/25 flex items-center justify-center text-[#34c759] shadow-sm"
+              initial={{ scale: 0, rotate: -25 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={triumphantSpring}
+            >
+              <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none">
+                <motion.path
+                  d="M5 13l4 4L19 7"
+                  stroke="#34c759"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.35, ease: 'easeOut', delay: 0.12 }}
+                />
               </svg>
-            </div>
+            </motion.div>
 
             <div className="space-y-1">
               <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#34c759]">
@@ -449,43 +490,52 @@ export default function PagarPage() {
               <p className="text-[14px] text-[#86868b]">Pagado a {paidResult.merchant_name}</p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-black/[0.06] space-y-3 text-left text-[14px] shadow-sm">
-              <div className="flex justify-between">
+            <motion.div
+              variants={receiptCardVariants}
+              initial="hidden"
+              animate="visible"
+              className="p-5 rounded-2xl bg-white border border-black/[0.06] space-y-3 text-left text-[14px] shadow-sm"
+            >
+              <motion.div variants={receiptItemVariants} className="flex justify-between">
                 <span className="text-[#86868b]">Referencia Bancaria</span>
                 <span className="font-mono text-[#1d1d1f] font-semibold">{paidResult.reference}</span>
-              </div>
-              <div className="flex justify-between">
+              </motion.div>
+              <motion.div variants={receiptItemVariants} className="flex justify-between">
                 <span className="text-[#86868b]">Canal de Envío</span>
                 <span className="text-[#1d1d1f]">Contactless Hardware NFC (APDU)</span>
-              </div>
-              <div className="flex justify-between">
+              </motion.div>
+              <motion.div variants={receiptItemVariants} className="flex justify-between">
                 <span className="text-[#86868b]">Nuevo Saldo</span>
                 <span className="font-mono text-[#1d1d1f] font-semibold">
                   Bs. {balance.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                 </span>
-              </div>
-              <div className="flex justify-between">
+              </motion.div>
+              <motion.div variants={receiptItemVariants} className="flex justify-between">
                 <span className="text-[#86868b]">Hora</span>
                 <span className="text-[#1d1d1f]">{new Date(paidResult.timestamp).toLocaleTimeString('es-VE')}</span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             <div className="space-y-3">
               <Receipt result={paidResult} />
-              <button
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                transition={tactileSpring}
                 type="button"
                 onClick={handleGoToWallet}
-                className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black active:scale-[0.99] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black transition-all shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Volver a Mi Billetera</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                transition={tactileSpring}
                 type="button"
                 onClick={handleReset}
                 className="w-full py-3.5 rounded-2xl border border-black/[0.08] text-[14px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/[0.02] transition-colors cursor-pointer"
               >
                 Hacer otro pago
-              </button>
+              </motion.button>
             </div>
           </div>
         )}

@@ -7,6 +7,13 @@ import { ChargeSession, UserProfile } from '@/types';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useHceSession, useNfcReader, FiscusNfcBridge } from '@/lib/nfc-bridge';
 import { Receipt } from '@/components/Receipt';
+import { motion } from 'framer-motion';
+import {
+  triumphantSpring,
+  receiptCardVariants,
+  receiptItemVariants,
+  tactileSpring,
+} from '@/lib/motion-config';
 
 let sharedAudioCtx: AudioContext | null = null;
 
@@ -424,58 +431,68 @@ export default function CobrarPage() {
           {/* Quick presets */}
           <div className="flex justify-center gap-2">
             {[50, 100, 250, 500].map((preset) => (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.94 }}
+                transition={tactileSpring}
                 key={preset}
                 type="button"
                 onClick={() => setAmountStr(String(preset))}
                 className="px-4 py-1.5 rounded-full bg-white border border-black/[0.06] text-[13px] font-medium text-[#1d1d1f] hover:bg-black/[0.02] shadow-sm transition-all"
               >
                 Bs. {preset}
-              </button>
+              </motion.button>
             ))}
           </div>
 
           {/* Numeric Keypad (Apple Style) */}
           <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                transition={tactileSpring}
                 key={digit}
                 type="button"
                 onClick={() => handleDigit(digit)}
-                className="h-16 rounded-2xl bg-white border border-black/[0.04] text-2xl font-medium text-[#1d1d1f] active:bg-[#f5f5f7] transition-all shadow-sm"
+                className="h-16 rounded-2xl bg-white border border-black/[0.04] text-2xl font-medium text-[#1d1d1f] transition-all shadow-sm"
               >
                 {digit}
-              </button>
+              </motion.button>
             ))}
             <div />
-            <button
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              transition={tactileSpring}
               type="button"
               onClick={() => handleDigit('0')}
-              className="h-16 rounded-2xl bg-white border border-black/[0.04] text-2xl font-medium text-[#1d1d1f] active:bg-[#f5f5f7] transition-all shadow-sm"
+              className="h-16 rounded-2xl bg-white border border-black/[0.04] text-2xl font-medium text-[#1d1d1f] transition-all shadow-sm"
             >
               0
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              transition={tactileSpring}
               type="button"
               onClick={handleDelete}
-              className="h-16 rounded-2xl bg-white border border-black/[0.04] text-[15px] font-medium text-[#86868b] active:bg-[#f5f5f7] transition-all flex items-center justify-center shadow-sm"
+              className="h-16 rounded-2xl bg-white border border-black/[0.04] text-[15px] font-medium text-[#86868b] transition-all flex items-center justify-center shadow-sm"
             >
               Borrar
-            </button>
+            </motion.button>
           </div>
 
-          <button
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            transition={tactileSpring}
             type="button"
             disabled={numericAmount <= 0 || isCreating}
             onClick={handleStartCharge}
-            className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black active:scale-[0.99] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 cursor-pointer"
           >
             {isCreating ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               '⚡ Activar Terminal NFC / Tarjetas'
             )}
-          </button>
+          </motion.button>
         </div>
       )}
 
@@ -496,10 +513,25 @@ export default function CobrarPage() {
 
           {/* Contactless Physical Touch Radar */}
           <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
-            {/* Concentric pulsing ripple rings */}
-            <div className="absolute inset-0 rounded-full bg-[#0071e3]/10 animate-ping duration-1000" />
-            <div className="absolute inset-4 rounded-full bg-[#0071e3]/15 animate-pulse" />
-            <div className="absolute inset-8 rounded-full bg-[#0071e3]/20" />
+            {/* 3 Concentric Staggered Ripple Rings */}
+            {[0, 1, 2].map((index) => (
+              <motion.div
+                key={index}
+                className="absolute inset-0 rounded-full border-2 border-[#0071e3]/30 bg-[#0071e3]/10"
+                initial={{ scale: 0.8, opacity: 0.7 }}
+                animate={{
+                  scale: [0.8, 1.45, 2.0],
+                  opacity: [0.7, 0.3, 0],
+                }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                  delay: index * 0.5,
+                  ease: 'easeOut',
+                }}
+                style={{ willChange: 'transform, opacity' }}
+              />
+            ))}
 
             {/* Central Terminal Icon */}
             <div className="relative w-28 h-28 rounded-full bg-white border border-black/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col items-center justify-center gap-1.5 z-10">
@@ -545,27 +577,31 @@ export default function CobrarPage() {
 
           {/* Testing / Demo Action Triggers */}
           <div className="space-y-2 pt-2">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={tactileSpring}
               type="button"
               disabled={simulatingTap}
               onClick={() => handleSimulateCardTap('Visa Débito Contactless')}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#1d1d1f] hover:bg-black active:scale-[0.99] text-[14px] font-semibold text-white transition-all shadow-[0_2px_8px_rgba(0,0,0,0.12)] flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#1d1d1f] hover:bg-black text-[14px] font-semibold text-white transition-all shadow-[0_2px_8px_rgba(0,0,0,0.12)] flex items-center justify-center gap-2 cursor-pointer"
             >
               {simulatingTap ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 '💳 Simular pase de Tarjeta (Visa / Mastercard)'
               )}
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={tactileSpring}
               type="button"
               disabled={simulatingTap}
               onClick={handleSimulateCustomerTap}
-              className="w-full py-2.5 px-4 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-[0.99] text-[13px] font-medium text-[#1d1d1f] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] text-[13px] font-medium text-[#1d1d1f] transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               📱 Simular toque de celular (Demostración)
-            </button>
+            </motion.button>
 
             <button
               type="button"
@@ -581,17 +617,25 @@ export default function CobrarPage() {
       {/* STATE 3: PAYMENT RECEIVED (SUCCESS RECEIPT) */}
       {isPaid && paidDetails && (
         <div className="py-8 space-y-8 text-center animate-fadeIn">
-          <div className="w-20 h-20 mx-auto rounded-full bg-[#34c759]/10 border border-[#34c759]/20 flex items-center justify-center text-[#34c759] shadow-sm">
-            <svg
-              className="w-10 h-10"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          <motion.div
+            className="w-20 h-20 mx-auto rounded-full bg-[#34c759]/10 border border-[#34c759]/25 flex items-center justify-center text-[#34c759] shadow-sm"
+            initial={{ scale: 0, rotate: -25 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={triumphantSpring}
+          >
+            <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none">
+              <motion.path
+                d="M5 13l4 4L19 7"
+                stroke="#34c759"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.35, ease: 'easeOut', delay: 0.12 }}
+              />
             </svg>
-          </div>
+          </motion.div>
 
           <div className="space-y-1">
             <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#34c759]">
@@ -606,47 +650,52 @@ export default function CobrarPage() {
           </div>
 
           {/* Receipt details */}
-          <div className="p-5 rounded-2xl bg-white border border-black/[0.06] space-y-3 text-left text-[14px] shadow-sm">
+          <motion.div
+            variants={receiptCardVariants}
+            initial="hidden"
+            animate="visible"
+            className="p-5 rounded-2xl bg-white border border-black/[0.06] space-y-3 text-left text-[14px] shadow-sm"
+          >
             {paidDetails.isCard ? (
               <>
-                <div className="flex justify-between">
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Método de Pago</span>
                   <span className="font-semibold text-[#1d1d1f]">Tarjeta Contactless EMV</span>
-                </div>
-                <div className="flex justify-between">
+                </motion.div>
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Marca / Producto</span>
                   <span className="text-[#1d1d1f]">{paidDetails.cardBrand || 'Visa Débito Contactless'}</span>
-                </div>
-                <div className="flex justify-between">
+                </motion.div>
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Número de Tarjeta</span>
                   <span className="font-mono text-[#1d1d1f] font-semibold">{paidDetails.maskedPan || '**** **** **** 8421'}</span>
-                </div>
-                <div className="flex justify-between">
+                </motion.div>
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Autorización / Ref</span>
                   <span className="font-mono text-[#1d1d1f] font-semibold">{paidDetails.ref}</span>
-                </div>
-                <div className="flex justify-between">
+                </motion.div>
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Canal</span>
                   <span className="text-[#1d1d1f]">NFC SoftPOS (ISO 14443-A/B)</span>
-                </div>
+                </motion.div>
               </>
             ) : (
               <>
-                <div className="flex justify-between">
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Referencia Bancaria</span>
                   <span className="font-mono text-[#1d1d1f] font-semibold">{paidDetails.ref}</span>
-                </div>
-                <div className="flex justify-between">
+                </motion.div>
+                <motion.div variants={receiptItemVariants} className="flex justify-between">
                   <span className="text-[#86868b]">Canal de Transferencia</span>
                   <span className="text-[#1d1d1f]">NFC HCE Directo (ISO 7816-4)</span>
-                </div>
+                </motion.div>
               </>
             )}
-            <div className="flex justify-between">
+            <motion.div variants={receiptItemVariants} className="flex justify-between">
               <span className="text-[#86868b]">Fecha y hora</span>
               <span className="text-[#1d1d1f]">{new Date().toLocaleTimeString('es-VE')}</span>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           <div className="space-y-3">
             <Receipt
@@ -663,20 +712,24 @@ export default function CobrarPage() {
               }}
             />
 
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={tactileSpring}
               type="button"
               onClick={handleGoToWallet}
-              className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black active:scale-[0.99] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black transition-all shadow-[0_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Volver a Mi Billetera</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={tactileSpring}
               type="button"
               onClick={resetCharge}
               className="w-full py-3.5 rounded-2xl border border-black/[0.08] text-[14px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/[0.02] transition-colors cursor-pointer"
             >
               Listo · Realizar otro cobro
-            </button>
+            </motion.button>
           </div>
         </div>
       )}

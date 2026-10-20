@@ -1,4 +1,9 @@
+'use client';
+
+import React from 'react';
+import { motion } from 'framer-motion';
 import { getEnabledBanks } from '@/config/banks';
+import { tactileSpring } from '@/lib/motion-config';
 
 interface BankSelectorProps {
   onSelect: (bankCode: string) => void;
@@ -30,7 +35,9 @@ export function BankSelector({
           const hasSaved = savedBanks.includes(bank.code);
 
           return (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              transition={tactileSpring}
               key={bank.code}
               type="button"
               onClick={() => onSelect(bank.code)}
@@ -70,7 +77,7 @@ export function BankSelector({
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </motion.button>
           );
         })}
       </div>
