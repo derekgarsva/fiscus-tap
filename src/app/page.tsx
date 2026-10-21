@@ -335,9 +335,20 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Footer Branding */}
-      <footer className="text-center pt-8 pb-2">
-        <span className="text-[11px] text-[#aeaeb2] tracking-[0.08em] uppercase">
+      {/* Footer Branding & APK Portal */}
+      <footer className="text-center pt-8 pb-2 space-y-2">
+        <div>
+          <Link
+            href="/apkportal"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 px-3 py-1.5 rounded-full transition-all"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Descargar APK Oficial para Android
+          </Link>
+        </div>
+        <span className="text-[11px] text-[#aeaeb2] tracking-[0.08em] uppercase block">
           Fiscus Tap · Pagos Físicos a un Toque
         </span>
       </footer>

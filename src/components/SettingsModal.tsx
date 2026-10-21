@@ -318,8 +318,21 @@ export function SettingsModal({
                     </div>
                   </div>
 
-                  {/* Reset wallet */}
+                  {/* Descargar APK Android */}
                   <div className="pt-2">
+                    <a
+                      href="/apkportal"
+                      className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-[13px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Descargar APK Nativo para Android
+                    </a>
+                  </div>
+
+                  {/* Reset wallet */}
+                  <div className="pt-1">
                     <motion.button
                       whileTap={{ scale: 0.96 }}
                       type="button"
