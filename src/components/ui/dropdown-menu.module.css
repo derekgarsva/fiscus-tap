@@ -1,0 +1,122 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1d1d1f;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  user-select: none;
+  -webkit-user-select: none;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.trigger:hover {
+  background: #f5f5f7;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.triggerIcon {
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.labelMeasure {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.labelText {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: #86868b;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trigger[data-state="open"] .chevron {
+  transform: rotate(180deg);
+}
+
+.menu {
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  padding: 6px;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.15);
+  z-index: 60;
+  outline: none;
+  position: relative;
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+}
+
+.highlight {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.highlight[data-tone="danger"] {
+  background: rgba(255, 59, 48, 0.12);
+}
+
+.item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1d1d1f;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.item[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.destructive {
+  color: #ff3b30;
+}
+
+.separator {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 4px 6px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  color: #86868b;
+}

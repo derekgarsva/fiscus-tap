@@ -17,6 +17,8 @@ import { WithdrawModal } from '@/components/WithdrawModal';
 import { BankCardsModal } from '@/components/BankCardsModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { getBankByCode } from '@/config/banks';
 
 export default function HomePage() {
@@ -82,8 +84,27 @@ export default function HomePage() {
 
   if (!isLoaded) {
     return (
-      <main className="min-h-screen bg-[#fbfbfd] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#1d1d1f] border-t-transparent rounded-full animate-spin" />
+      <main className="min-h-[100dvh] w-full max-w-lg mx-auto bg-[#fbfbfd] text-[#1d1d1f] flex flex-col justify-between py-6 px-5 pt-safe pb-safe overflow-x-hidden">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center pb-4">
+            <Skeleton lines={1} className="w-32 h-6" />
+            <Skeleton avatar lines={0} />
+          </div>
+          <div className="rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-4">
+            <Skeleton lines={3} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-3xl bg-white p-6 h-36 border border-black/[0.06]">
+              <Skeleton lines={2} />
+            </div>
+            <div className="rounded-3xl bg-white p-6 h-36 border border-black/[0.06]">
+              <Skeleton lines={2} />
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            <Skeleton lines={4} />
+          </div>
+        </div>
       </main>
     );
   }
@@ -97,7 +118,7 @@ export default function HomePage() {
   const usdEstimate = (balance / 50).toFixed(2); // Approximate ref
 
   return (
-    <main className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f] flex flex-col justify-between py-10 px-6 max-w-lg mx-auto">
+    <main className="min-h-[100dvh] w-full max-w-lg mx-auto bg-[#fbfbfd] text-[#1d1d1f] flex flex-col justify-between py-6 px-5 pt-safe pb-safe overflow-x-hidden">
       {/* Top Header */}
       <header className="flex items-center justify-between pb-6">
         <div className="flex items-center gap-2">
@@ -109,21 +130,52 @@ export default function HomePage() {
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleReset}
-            title="Reiniciar billetera para probar onboarding"
-            className="text-[12px] text-[#86868b] hover:text-[#1d1d1f] transition-colors"
-          >
-            Reiniciar
-          </button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu
+            label={profile.name.split(' ')[0]}
+            items={[
+              {
+                label: 'Gestionar Tarjetas',
+                icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                ),
+                onSelect: () => setCardsOpen(true),
+              },
+              {
+                label: 'Ajustes y Perfil',
+                icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ),
+                onSelect: () => setSettingsOpen(true),
+              },
+              {
+                label: 'Descargar APK (Android)',
+                icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                ),
+                onSelect: () => window.open('https://apkportal.vercel.app/fiscus', '_blank'),
+              },
+              {
+                label: 'Reiniciar Billetera',
+                destructive: true,
+                separatorBefore: true,
+                onSelect: handleReset,
+              },
+            ]}
+          />
           <motion.button
             whileTap={{ scale: 0.94 }}
             transition={tactileSpring}
             type="button"
             onClick={() => setSettingsOpen(true)}
-            title="Ajustes, Perfil y Soporte"
+            title="Ajustes y Perfil"
             className="w-9 h-9 rounded-full bg-black/[0.05] border border-black/[0.06] flex items-center justify-center text-sm font-semibold text-[#1d1d1f] hover:bg-black/[0.1] transition-all cursor-pointer"
           >
             {profile.name.charAt(0).toUpperCase()}
@@ -133,22 +185,16 @@ export default function HomePage() {
 
       {/* Main Wallet Content */}
       <div className="space-y-8 py-2">
-        {/* Apple Card Component (Tap to manage bank cards) */}
+        {/* Apple Card Component (Un solo botón dedicado para tarjetas) */}
         <motion.div
-          whileTap={{ scale: 0.98 }}
+          whileTap={{ scale: 0.99 }}
           transition={tactileSpring}
-          onClick={() => setCardsOpen(true)}
-          role="button"
-          tabIndex={0}
-          className="relative overflow-hidden rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-6 cursor-pointer hover:border-[#0071e3]/40 transition-all group"
+          className="relative overflow-hidden rounded-3xl bg-white border border-black/[0.06] p-7 shadow-apple-card space-y-6"
         >
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[12px] font-medium tracking-[0.08em] text-[#86868b] uppercase flex items-center gap-1.5">
-                <span>Saldo Disponible</span>
-                <span className="text-[10px] text-[#0071e3] font-semibold bg-[#0071e3]/10 px-2 py-0.5 rounded-full">
-                  Cambiar Banco ▾
-                </span>
+              <span className="text-[12px] font-medium tracking-[0.08em] text-[#86868b] uppercase block">
+                Saldo Disponible
               </span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xl font-medium text-[#86868b]">Bs.</span>
@@ -161,29 +207,36 @@ export default function HomePage() {
               </span>
             </div>
 
-            {/* Linked Bank Badge */}
+            {/* Linked Bank Indicator */}
             <div className="text-right space-y-1">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5f5f7] border border-black/[0.04] text-[12px] font-medium text-[#1d1d1f] group-hover:bg-[#0071e3]/10 group-hover:text-[#0071e3] transition-colors">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5f5f7] border border-black/[0.04] text-[12px] font-medium text-[#1d1d1f]">
                 <span
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: defaultBank?.color || '#00A651' }}
                 />
                 {defaultBank?.short_name || 'Banesco'}
-                <svg className="w-3.5 h-3.5 text-[#86868b] group-hover:text-[#0071e3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
+              </div>
               <div className="text-[11px] text-[#86868b] font-mono">
                 {profile.phone}
               </div>
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-between text-[12px] border-t border-black/[0.04] text-[#86868b]">
-            <span className="font-medium text-[#1d1d1f]">{profile.name}</span>
-            <span className="text-[#0071e3] font-medium group-hover:underline flex items-center gap-1">
-              Ver tarjetas bancarias ›
-            </span>
+          <div className="pt-3 flex items-center justify-between border-t border-black/[0.04]">
+            <span className="font-medium text-[13px] text-[#1d1d1f]">{profile.name}</span>
+            {/* UN SOLO BOTÓN DEDICADO DE TARJETAS */}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.94 }}
+              transition={tactileSpring}
+              onClick={() => setCardsOpen(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f5f5f7] hover:bg-[#0071e3] text-[#1d1d1f] hover:text-white border border-black/[0.06] text-[12px] font-semibold transition-all shadow-sm group/btn cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 text-[#86868b] group-hover/btn:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <span>Tarjetas</span>
+            </motion.button>
           </div>
         </motion.div>
 

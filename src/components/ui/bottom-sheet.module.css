@@ -1,0 +1,127 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 50;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--sheet-extension, 160px));
+  max-height: calc(100vh * var(--sheet-max, 0.92));
+  z-index: 51;
+  background: #fbfbfd;
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: calc(var(--sheet-extension, 160px) + env(safe-area-inset-bottom, 0px));
+  touch-action: none;
+  outline: none;
+}
+
+.header {
+  padding: 8px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+}
+
+.grabber {
+  background: transparent;
+  border: none;
+  padding: 6px 24px;
+  cursor: grab;
+  outline: none;
+  margin-bottom: 6px;
+  touch-action: none;
+}
+
+.grabberBar {
+  display: block;
+  width: 40px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.22);
+  transition: background 0.2s;
+}
+
+.grabber:hover .grabberBar {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.headRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.02em;
+}
+
+.description {
+  font-size: 13px;
+  color: #86868b;
+}
+
+.close {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1d1d1f;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

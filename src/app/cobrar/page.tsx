@@ -385,7 +385,7 @@ export default function CobrarPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f] flex flex-col justify-between py-10 px-6 max-w-md mx-auto">
+    <main className="min-h-[100dvh] w-full max-w-md mx-auto flex flex-col justify-between py-6 px-5 pt-safe pb-safe overflow-x-hidden bg-[#fbfbfd] text-[#1d1d1f]">
       {/* Top Header */}
       <div className="flex items-center justify-between pb-4">
         <button

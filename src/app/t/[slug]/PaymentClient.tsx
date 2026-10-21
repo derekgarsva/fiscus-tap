@@ -11,6 +11,7 @@ import { AmountInput } from '@/components/AmountInput';
 import { PaymentForm } from '@/components/PaymentForm';
 import { PaymentConfirmation } from '@/components/PaymentConfirmation';
 import { Receipt } from '@/components/Receipt';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type FlowStep =
   | 'loading'
@@ -140,7 +141,7 @@ export default function PaymentClient({ slug }: { slug: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f] flex flex-col justify-between py-10 px-6 max-w-md mx-auto">
+    <main className="min-h-[100dvh] w-full max-w-md mx-auto flex flex-col justify-between py-6 px-5 pt-safe pb-safe overflow-x-hidden bg-[#fbfbfd] text-[#1d1d1f]">
       {/* Top Header / Fiscus Brand */}
       <div className="flex items-center justify-between pb-2">
         <Link
@@ -159,9 +160,8 @@ export default function PaymentClient({ slug }: { slug: string }) {
       <div className="py-4">
         {/* Loading */}
         {step === 'loading' && (
-          <div className="flex flex-col items-center justify-center py-24 space-y-4">
-            <div className="w-8 h-8 border-2 border-[#1d1d1f] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[#86868b] text-[14px]">Identificando comercio NFC...</p>
+          <div className="py-12 space-y-4">
+            <Skeleton lines={4} avatar={true} label="Identificando comercio NFC..." />
           </div>
         )}
 

@@ -1,0 +1,50 @@
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.track {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.12);
+  transition: background 0.25s ease;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.switch[data-state="checked"] .track {
+  background: #34c759;
+}
+
+.thumb {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  transform-origin: left center;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -303,7 +303,7 @@ describe('Milestone 2 Verification: FiscusNfcBridge Integration Tests', () => {
     await FiscusNfcBridge.startReaderMode({ timeoutMs: 3500 });
 
     const payerSub = await FiscusNfcBridge.addListener('onTagDiscovered', (evt) => {
-      payerReceivedSessionId = evt.payload.sessionId;
+      payerReceivedSessionId = (evt.payload as any)?.sessionId;
     });
 
     // Web simulation helper trigger

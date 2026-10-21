@@ -1,0 +1,52 @@
+.frame {
+  width: 100%;
+  position: relative;
+}
+
+.root {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0.06) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  width: 100%;
+}
+
+.line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0.06) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--index, 0) * 120ms);
+  width: 100%;
+}
+
+.line:last-child:not(:first-child) {
+  width: 65%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '@/types';
 import { saveUserProfile, resetWallet } from '@/lib/wallet-store';
 import { getBankByCode } from '@/config/banks';
+import { Switch } from '@/components/ui/switch';
 import {
   modalBackdropVariants,
   bottomSheetVariants,
@@ -282,11 +283,10 @@ export function SettingsModal({
                           Vibrar al detectar terminal NFC
                         </div>
                       </div>
-                      <input
-                        type="checkbox"
+                      <Switch
                         checked={hapticEnabled}
-                        onChange={(e) => setHapticEnabled(e.target.checked)}
-                        className="w-5 h-5 accent-[#0071e3] cursor-pointer"
+                        onCheckedChange={setHapticEnabled}
+                        label="Vibración Háptica"
                       />
                     </div>
 
@@ -297,11 +297,10 @@ export function SettingsModal({
                           Tono de confirmación bancaria
                         </div>
                       </div>
-                      <input
-                        type="checkbox"
+                      <Switch
                         checked={soundEnabled}
-                        onChange={(e) => setSoundEnabled(e.target.checked)}
-                        className="w-5 h-5 accent-[#0071e3] cursor-pointer"
+                        onCheckedChange={setSoundEnabled}
+                        label="Sonido de Pago"
                       />
                     </div>
 
