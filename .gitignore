@@ -33,8 +33,6 @@ next-env.d.ts
 # mobile & build artifacts
 jdk17/
 *.apk
-!public/fiscus-tap.apk
-!public/downloads/*.apk
 *.aab
 *.ipa
 temp_android_backup_src/
