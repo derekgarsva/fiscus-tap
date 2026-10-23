@@ -10,7 +10,6 @@ import {
   bottomSheetDragProps,
   createDragEndHandler,
 } from '@/lib/motion-config';
-import { MoneyInput } from '@/components/ui/money-input';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -27,18 +26,16 @@ export function WithdrawModal({
   currentBalance,
   onSuccess,
 }: WithdrawModalProps) {
-  const [amountMinor, setAmountMinor] = useState<number | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState('VES');
+  const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  const numericAmount = amountMinor !== null ? amountMinor / 100 : 0;
-  const maxMinor = Math.round(currentBalance * 100);
+  const numeric = parseFloat(amount) || 0;
 
   async function handleWithdraw(e: React.FormEvent) {
     e.preventDefault();
-    if (numericAmount <= 0) return;
-    if (numericAmount > currentBalance) {
+    if (numeric <= 0) return;
+    if (numeric > currentBalance) {
       setError('El monto supera tu saldo disponible.');
       return;
     }
@@ -47,9 +44,9 @@ export function WithdrawModal({
     setError('');
 
     // Simulate instant bank payout
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1200));
 
-    const result = withdrawFunds(numericAmount, user.default_bank);
+    const result = withdrawFunds(numeric, user.default_bank);
     setIsProcessing(false);
 
     if (result.success) {
@@ -69,7 +66,7 @@ export function WithdrawModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
@@ -81,7 +78,7 @@ export function WithdrawModal({
             {...bottomSheetDragProps}
             onDragEnd={createDragEndHandler(onClose)}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-white rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-black/10 max-h-[90vh] flex flex-col overflow-hidden pb-safe text-black font-sans"
+            className="w-full max-w-md bg-[#fbfbfd] rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-black/[0.08] max-h-[90vh] flex flex-col overflow-hidden pb-safe"
           >
             {/* Top Drag Handle */}
             <div className="w-full pt-3 pb-1 flex justify-center touch-none cursor-grab active:cursor-grabbing">
@@ -91,12 +88,12 @@ export function WithdrawModal({
             {/* Scrollable Container */}
             <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-black/5">
+              <div className="flex items-center justify-between pb-2 border-b border-black/[0.04]">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-black font-mono uppercase">
-                    Retirar Fondos
+                  <h2 className="text-xl font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+                    Retirar a tu Banco
                   </h2>
-                  <p className="text-[13px] text-neutral-500 mt-0.5 font-mono">
+                  <p className="text-[13px] text-[#86868b] mt-0.5">
                     Disponible: Bs.{' '}
                     {currentBalance.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
                   </p>
@@ -105,57 +102,66 @@ export function WithdrawModal({
                   whileTap={{ scale: 0.92 }}
                   type="button"
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-neutral-100 text-black hover:bg-neutral-200 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-black/[0.05] text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-center text-sm transition-colors"
                 >
                   ✕
                 </motion.button>
               </div>
 
               <form onSubmit={handleWithdraw} className="space-y-6">
-                {/* MoneyInput with Max Limit and All-In button */}
-                <div className="space-y-2">
-                  <div className="flex justify-end">
+                {/* Amount input */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[13px] font-medium text-[#86868b] tracking-[-0.01em]">
+                      Monto a retirar (Bs.)
+                    </label>
                     <button
                       type="button"
-                      onClick={() => setAmountMinor(maxMinor)}
-                      className="text-[11px] font-bold font-mono uppercase text-black hover:underline cursor-pointer"
+                      onClick={() => setAmount(String(currentBalance))}
+                      className="text-[12px] font-medium text-[#0071e3] hover:underline"
                     >
-                      [ Retirar Todo ]
+                      Retirar todo
                     </button>
                   </div>
-                  <MoneyInput
-                    label="Monto a Retirar"
-                    value={amountMinor}
-                    onValueChange={(val) => {
-                      setAmountMinor(val);
-                      setError('');
-                    }}
-                    currency={selectedCurrency}
-                    onCurrencyChange={setSelectedCurrency}
-                    currencies={['VES', 'USD', 'EUR', 'SGD', 'GBP']}
-                    max={maxMinor}
-                    quickAdd={[50, 100, 250, 500]}
-                    error={error}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-[#86868b] font-medium">
+                      Bs.
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      max={currentBalance}
+                      value={amount}
+                      onChange={(e) => {
+                        setAmount(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="0.00"
+                      className="w-full pl-14 pr-4 py-3.5 bg-white border border-black/[0.08] rounded-2xl text-2xl font-semibold text-[#1d1d1f] focus:outline-none focus:border-[#1d1d1f] transition-all font-mono"
+                      autoFocus
+                    />
+                  </div>
+                  {error && <p className="text-[12px] text-[#ff3b30] mt-1.5">{error}</p>}
                 </div>
 
                 {/* Destination info */}
-                <div className="p-4 rounded-2xl bg-neutral-50 border border-black/5 space-y-2 text-[13px] font-mono">
+                <div className="p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-2 text-[13px]">
                   <div className="flex justify-between">
-                    <span className="text-neutral-500 uppercase">Destino</span>
-                    <span className="font-bold text-black uppercase">
+                    <span className="text-[#86868b]">Destino</span>
+                    <span className="font-semibold text-[#1d1d1f] uppercase">
                       {user.default_bank}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-500 uppercase">Titular</span>
-                    <span className="text-black font-medium">
+                    <span className="text-[#86868b]">Titular</span>
+                    <span className="text-[#1d1d1f] font-medium">
                       {user.name} ({user.document_type}-{user.document_number})
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-500 uppercase">Teléfono</span>
-                    <span className="text-black font-bold">{user.phone}</span>
+                    <span className="text-[#86868b]">Teléfono asociado</span>
+                    <span className="text-[#1d1d1f] font-mono">{user.phone}</span>
                   </div>
                 </div>
 
@@ -164,8 +170,8 @@ export function WithdrawModal({
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     type="submit"
-                    disabled={isProcessing || numericAmount <= 0 || numericAmount > currentBalance}
-                    className="w-full py-4 rounded-2xl font-bold text-[15px] font-mono uppercase tracking-wider bg-black text-white hover:bg-neutral-800 transition-all disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                    disabled={isProcessing || numeric <= 0 || numeric > currentBalance}
+                    className="w-full py-4 rounded-2xl font-medium text-[16px] bg-[#1d1d1f] text-white hover:bg-black transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
                   >
                     {isProcessing ? (
                       <>
@@ -173,7 +179,7 @@ export function WithdrawModal({
                         <span>Transfiriendo a tu banco...</span>
                       </>
                     ) : (
-                      `Transferir ${selectedCurrency} ${numericAmount.toFixed(2)}`
+                      `Transferir Bs. ${numeric.toFixed(2)}`
                     )}
                   </motion.button>
                 </div>

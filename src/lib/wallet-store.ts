@@ -11,30 +11,6 @@ const INITIAL_BALANCE = 1450.00;
 
 const DEFAULT_TRANSACTIONS: WalletTransaction[] = [
   {
-    id: 'tx-today-01',
-    type: 'payment_sent',
-    amount: 6.00,
-    currency: 'SGD',
-    title: 'Coffee',
-    subtitle: 'Food & Drink · Registro Rápido',
-    bank_code: 'receipt',
-    reference: 'REC-CF-1002',
-    timestamp: new Date().toISOString(),
-    status: 'completed',
-  },
-  {
-    id: 'tx-today-02',
-    type: 'payment_sent',
-    amount: 14.50,
-    currency: 'SGD',
-    title: 'Taxi to Office',
-    subtitle: 'Transport · Registro Rápido',
-    bank_code: 'receipt',
-    reference: 'REC-TX-3091',
-    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-    status: 'completed',
-  },
-  {
     id: 'tx-welcome-01',
     type: 'deposit',
     amount: 1450.00,
@@ -216,34 +192,6 @@ export function recordCollection(
   const txs = [tx, ...getTransactions()];
   localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(txs));
   return tx;
-}
-
-export function recordExpense(
-  amount: number,
-  description: string,
-  category: string,
-  currency = 'VES'
-): { balance: number; tx: WalletTransaction } {
-  const current = getWalletBalance();
-  const next = Math.max(0, current - amount);
-  localStorage.setItem(WALLET_BALANCE_KEY, String(next));
-
-  const tx: WalletTransaction = {
-    id: `tx-exp-${Date.now()}`,
-    type: 'payment_sent',
-    amount,
-    currency,
-    title: description,
-    subtitle: `${category} · Registro Rápido`,
-    bank_code: 'receipt',
-    reference: `REC-${Date.now().toString(36).toUpperCase()}`,
-    timestamp: new Date().toISOString(),
-    status: 'completed',
-  };
-
-  const txs = [tx, ...getTransactions()];
-  localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(txs));
-  return { balance: next, tx };
 }
 
 export function resetWallet(): void {
