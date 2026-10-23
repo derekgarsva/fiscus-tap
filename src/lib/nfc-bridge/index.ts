@@ -9,6 +9,8 @@ export {
   FiscusNfcBridge,
   isBrowser,
   isNativeAndroid,
+  isIos,
+  isNativeIos,
   checkNfcCapabilities,
   subscribeNfcEvent,
   onTagDiscovered,

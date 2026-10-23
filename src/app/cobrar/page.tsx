@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { getUserProfile, recordCollection } from '@/lib/wallet-store';
 import { ChargeSession, UserProfile } from '@/types';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
-import { useHceSession, useNfcReader, FiscusNfcBridge } from '@/lib/nfc-bridge';
+import { useHceSession, useNfcReader, FiscusNfcBridge, isIos } from '@/lib/nfc-bridge';
+import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { Receipt } from '@/components/Receipt';
 import { motion } from 'framer-motion';
 import {
@@ -49,6 +50,17 @@ export default function CobrarPage() {
     isCard?: boolean;
   } | null>(null);
   const [simulatingTap, setSimulatingTap] = useState(false);
+  const [chargeMode, setChargeMode] = useState<'nfc' | 'qr'>('nfc');
+  const [isIosDevice, setIsIosDevice] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => {
+    const ios = isIos();
+    setIsIosDevice(ios);
+    if (ios) {
+      setChargeMode('qr');
+    }
+  }, []);
 
   // Dedicated HCE Session Hook (for Phone-to-Phone mode)
   const { isArmed, isPayloadSent, armSession, disarmSession } = useHceSession();
@@ -253,6 +265,7 @@ export default function CobrarPage() {
 
   function handleDigit(d: string) {
     if (amountStr.length >= 7) return;
+    unlockAudio();
     setAmountStr((prev) => prev + d);
   }
 
@@ -381,6 +394,8 @@ export default function CobrarPage() {
     setIsPaid(false);
     setPaidDetails(null);
     setAmountStr('');
+    setChargeMode(isIosDevice ? 'qr' : 'nfc');
+    setCopiedLink(false);
     clearDiscoveredTag();
   }
 
@@ -496,14 +511,14 @@ export default function CobrarPage() {
         </div>
       )}
 
-      {/* STATE 2: ACTIVE CONTACTLESS TERMINAL (WAITING FOR CARD OR PHONE TAP) */}
+      {/* STATE 2: ACTIVE CONTACTLESS TERMINAL (WAITING FOR CARD OR PHONE TAP OR QR SCAN) */}
       {session && !isPaid && (
-        <div className="py-6 space-y-6 text-center animate-fadeIn">
+        <div className="py-6 space-y-5 text-center animate-fadeIn">
           {/* Amount Header */}
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0071e3]/10 text-[#0071e3] text-[12px] font-semibold">
               <span className="w-2 h-2 rounded-full bg-[#0071e3] animate-pulse" />
-              Terminal Contactless Activo (SoftPOS)
+              Terminal {chargeMode === 'qr' ? 'Código QR Dinámico (iPhone)' : 'Contactless Activo (SoftPOS)'}
             </div>
             <div className="text-4xl font-bold tracking-[-0.03em] font-mono text-[#1d1d1f] pt-1">
               Bs. {session.amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
@@ -511,69 +526,134 @@ export default function CobrarPage() {
             <p className="text-[13px] text-[#86868b]">{session.merchant_name}</p>
           </div>
 
-          {/* Contactless Physical Touch Radar */}
-          <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
-            {/* 3 Concentric Staggered Ripple Rings */}
-            {[0, 1, 2].map((index) => (
-              <motion.div
-                key={index}
-                className="absolute inset-0 rounded-full border-2 border-[#0071e3]/30 bg-[#0071e3]/10"
-                initial={{ scale: 0.8, opacity: 0.7 }}
-                animate={{
-                  scale: [0.8, 1.45, 2.0],
-                  opacity: [0.7, 0.3, 0],
-                }}
-                transition={{
-                  duration: 1.8,
-                  repeat: Infinity,
-                  delay: index * 0.5,
-                  ease: 'easeOut',
-                }}
-                style={{ willChange: 'transform, opacity' }}
+          {/* Mode Selector for iPhone / Android */}
+          <div className="flex gap-1 p-1 bg-[#f5f5f7] rounded-2xl max-w-xs mx-auto border border-black/[0.04]">
+            <button
+              type="button"
+              onClick={() => setChargeMode('nfc')}
+              className={`flex-1 py-2 px-3 rounded-xl text-[12px] font-semibold transition-all cursor-pointer ${
+                chargeMode === 'nfc'
+                  ? 'bg-white text-[#1d1d1f] shadow-sm'
+                  : 'text-[#86868b] hover:text-[#1d1d1f]'
+              }`}
+            >
+              📲 Toque NFC (POS)
+            </button>
+            <button
+              type="button"
+              onClick={() => setChargeMode('qr')}
+              className={`flex-1 py-2 px-3 rounded-xl text-[12px] font-semibold transition-all cursor-pointer ${
+                chargeMode === 'qr'
+                  ? 'bg-white text-[#1d1d1f] shadow-sm'
+                  : 'text-[#86868b] hover:text-[#1d1d1f]'
+              }`}
+            >
+              📷 Código QR (iPhone)
+            </button>
+          </div>
+
+          {/* MODE 1: NFC RADAR */}
+          {chargeMode === 'nfc' && (
+            <div className="space-y-5 animate-fadeIn">
+              {/* Contactless Physical Touch Radar */}
+              <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+                {/* 3 Concentric Staggered Ripple Rings */}
+                {[0, 1, 2].map((index) => (
+                  <motion.div
+                    key={index}
+                    className="absolute inset-0 rounded-full border-2 border-[#0071e3]/30 bg-[#0071e3]/10"
+                    initial={{ scale: 0.8, opacity: 0.7 }}
+                    animate={{
+                      scale: [0.8, 1.45, 2.0],
+                      opacity: [0.7, 0.3, 0],
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                      delay: index * 0.5,
+                      ease: 'easeOut',
+                    }}
+                    style={{ willChange: 'transform, opacity' }}
+                  />
+                ))}
+
+                {/* Central Terminal Icon */}
+                <div className="relative w-28 h-28 rounded-full bg-white border border-black/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col items-center justify-center gap-1.5 z-10">
+                  <svg
+                    className="w-9 h-9 text-[#0071e3]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                  </svg>
+                  <span className="text-[11px] font-semibold tracking-tight text-[#1d1d1f]">
+                    {isPayloadSent ? '¡Toque detectado!' : 'Acerca tarjeta o cel'}
+                  </span>
+                </div>
+              </div>
+
+              {/* User Instructions */}
+              <div className="p-4 rounded-2xl bg-white border border-black/[0.06] space-y-2 text-center shadow-sm">
+                <p className="text-[14px] font-semibold text-[#1d1d1f]">
+                  Pasa la tarjeta contactless o acerca el teléfono
+                </p>
+                <p className="text-[12px] text-[#86868b] leading-relaxed">
+                  Coloca cualquier tarjeta de débito o crédito Visa, Mastercard, Maestro o acerca el teléfono del cliente a la parte trasera de este celular.
+                </p>
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full bg-black/[0.04] text-[11px] font-medium text-[#1d1d1f]">
+                    💳 Visa / Mastercard / Maestro
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-black/[0.04] text-[11px] font-medium text-[#1d1d1f]">
+                    📱 Teléfonos NFC
+                  </span>
+                </div>
+                <div className="pt-1 flex items-center justify-center gap-1.5 text-[11px] text-[#34c759] font-medium">
+                  <span className="w-2 h-2 rounded-full bg-[#34c759] animate-ping" />
+                  <span>Lector NFC 13.56 MHz Activo (SoftPOS Certificable)</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODE 2: DYNAMIC QR FOR IPHONE & WEB */}
+          {chargeMode === 'qr' && (
+            <div className="space-y-4 animate-fadeIn">
+              <QRCodeDisplay
+                url={typeof window !== 'undefined' ? `${window.location.origin}/t/${session.id}` : `https://apkportal.vercel.app/t/${session.id}`}
+                amount={session.amount}
               />
-            ))}
 
-            {/* Central Terminal Icon */}
-            <div className="relative w-28 h-28 rounded-full bg-white border border-black/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col items-center justify-center gap-1.5 z-10">
-              <svg
-                className="w-9 h-9 text-[#0071e3]"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
-              <span className="text-[11px] font-semibold tracking-tight text-[#1d1d1f]">
-                {isPayloadSent ? '¡Toque detectado!' : 'Acerca tarjeta o cel'}
-              </span>
-            </div>
-          </div>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${window.location.origin}/t/${session.id}`;
+                    navigator.clipboard.writeText(url);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }}
+                  className="px-4 py-2.5 rounded-2xl bg-white border border-black/[0.08] hover:bg-black/[0.02] text-[13px] font-medium text-[#0071e3] transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                  <span>{copiedLink ? '¡Enlace de Pago Copiado!' : 'Copiar Enlace de Pago'}</span>
+                </button>
+              </div>
 
-          {/* User Instructions */}
-          <div className="p-4 rounded-2xl bg-white border border-black/[0.06] space-y-2 text-center shadow-sm">
-            <p className="text-[14px] font-semibold text-[#1d1d1f]">
-              Pasa la tarjeta contactless o acerca el teléfono
-            </p>
-            <p className="text-[12px] text-[#86868b] leading-relaxed">
-              Coloca cualquier tarjeta de débito o crédito Visa, Mastercard, Maestro o acerca el teléfono del cliente a la parte trasera de este celular.
-            </p>
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5">
-              <span className="px-2.5 py-0.5 rounded-full bg-black/[0.04] text-[11px] font-medium text-[#1d1d1f]">
-                💳 Visa / Mastercard / Maestro
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-black/[0.04] text-[11px] font-medium text-[#1d1d1f]">
-                📱 Teléfonos NFC
-              </span>
+              <div className="p-3.5 rounded-2xl bg-[#0071e3]/5 border border-[#0071e3]/10 text-center">
+                <p className="text-[12px] text-[#0071e3] font-medium leading-relaxed">
+                  Cualquier iPhone o Android puede escanear con la cámara nativa sin instalar nada. Al pagarse, esta pantalla se actualizará automáticamente en tiempo real.
+                </p>
+              </div>
             </div>
-            <div className="pt-1 flex items-center justify-center gap-1.5 text-[11px] text-[#34c759] font-medium">
-              <span className="w-2 h-2 rounded-full bg-[#34c759] animate-ping" />
-              <span>Lector NFC 13.56 MHz Activo (SoftPOS Certificable)</span>
-            </div>
-          </div>
+          )}
 
           {/* Testing / Demo Action Triggers */}
           <div className="space-y-2 pt-2">

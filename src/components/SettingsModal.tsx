@@ -361,6 +361,15 @@ export function SettingsModal({
 
                     <div className="p-4 rounded-2xl bg-white border border-black/[0.06] space-y-1.5">
                       <h3 className="font-semibold text-[#1d1d1f] text-[14px]">
+                        ¿Cómo funciona en iPhone (iOS)?
+                      </h3>
+                      <p className="text-[12px] text-[#86868b] leading-relaxed">
+                        En iPhone puedes pagar acercando la parte superior del teléfono a terminales contactless (vía CoreNFC) o escaneando el código QR del comercio con la cámara nativa de iOS sin instalar nada. Para cobrar desde un iPhone, Fiscus genera un código QR dinámico sincronizado en tiempo real con confirmación auditiva instantánea.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white border border-black/[0.06] space-y-1.5">
+                      <h3 className="font-semibold text-[#1d1d1f] text-[14px]">
                         ¿Qué bancos son soportados?
                       </h3>
                       <p className="text-[12px] text-[#86868b] leading-relaxed">

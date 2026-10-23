@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getUserProfile, recordPayment, getWalletBalance } from '@/lib/wallet-store';
 import { ChargeSession, UserProfile } from '@/types';
 import { generateBankingReference } from '@/lib/banking-reference';
-import { useNfcReader, FiscusNfcBridge, type TagDiscoveredEvent } from '@/lib/nfc-bridge';
+import { useNfcReader, FiscusNfcBridge, isIos, isNativeIos, type TagDiscoveredEvent } from '@/lib/nfc-bridge';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Receipt } from '@/components/Receipt';
 import { motion } from 'framer-motion';
@@ -25,6 +25,8 @@ export default function PagarPage() {
   const [autoPayEnabled, setAutoPayEnabled] = useState(true);
   const [simulatingReaderTap, setSimulatingReaderTap] = useState(false);
   const [insufficientFundsError, setInsufficientFundsError] = useState<string | null>(null);
+  const [isIosDevice, setIsIosDevice] = useState(false);
+  const [isNativeIosDevice, setIsNativeIosDevice] = useState(false);
 
   const [paidResult, setPaidResult] = useState<{
     success: boolean;
@@ -56,6 +58,8 @@ export default function PagarPage() {
     const profile = getUserProfile();
     setUser(profile);
     setBalance(getWalletBalance());
+    setIsIosDevice(isIos());
+    setIsNativeIosDevice(isNativeIos());
 
     // Auto-start Reader Mode so the phone is ready for physical touch
     startScanning().catch((err) => {
@@ -71,9 +75,11 @@ export default function PagarPage() {
   useEffect(() => {
     if (!discoveredTag) return;
 
-    // Haptic feedback on physical touch
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([120, 60, 120]);
+    // Haptic feedback on physical touch (safely guarded for iOS Safari/WebKit)
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate([120, 60, 120]);
+      } catch {}
     }
 
     const rawTag = discoveredTag as any;
@@ -411,24 +417,54 @@ export default function PagarPage() {
 
             <div className="space-y-1">
               <h3 className="font-semibold text-xl text-[#1d1d1f] tracking-tight">
-                Acerca tu celular al cobrador
+                {isNativeIosDevice
+                  ? 'Acerca la parte superior de tu iPhone'
+                  : isIosDevice
+                  ? 'Pagar desde iPhone'
+                  : 'Acerca tu celular al cobrador'}
               </h3>
               <p className="text-[13px] text-[#86868b] max-w-xs mx-auto leading-relaxed">
-                Junta la parte trasera de tu teléfono con la del otro celular para transferir el pago por NFC.
+                {isNativeIosDevice
+                  ? 'El sensor NFC de Apple está en el borde superior de tu iPhone. Acércalo al otro teléfono o terminal.'
+                  : isIosDevice
+                  ? 'Safari Web no permite NFC directo. Apunta tu cámara nativa al código QR del cobrador o ingresa el código.'
+                  : 'Junta la parte trasera de tu teléfono con la del otro celular para transferir el pago por NFC.'}
               </p>
             </div>
 
             <div className="p-3 rounded-2xl bg-white border border-black/[0.06] text-[12px] text-[#86868b] space-y-1 shadow-sm">
               <div className="flex items-center justify-center gap-1.5 text-[#34c759] font-medium">
                 <span className="w-2 h-2 rounded-full bg-[#34c759] animate-ping" />
-                <span>Modo Lector NFC Activo · AID F046495343555301</span>
+                <span>
+                  {isNativeIosDevice
+                    ? 'Lector CoreNFC Activo en iPhone'
+                    : isIosDevice
+                    ? 'Modo Cámara / QR Activo'
+                    : 'Modo Lector NFC Activo · AID F046495343555301'}
+                </span>
               </div>
               <p className="text-[11px] text-[#86868b]">
-                Canal seguro ISO 7816-4 sin choosers de billetera ni cuadros de diálogo del sistema.
+                {isIosDevice && !isNativeIosDevice
+                  ? 'Compatible con la cámara nativa de iOS sin necesidad de instalar nada adicional.'
+                  : 'Canal seguro ISO 7816-4 sin choosers de billetera ni cuadros de diálogo del sistema.'}
               </p>
             </div>
 
             <div className="space-y-3 max-w-xs mx-auto pt-2">
+              {isIosDevice && !isNativeIosDevice && (
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  transition={tactileSpring}
+                  type="button"
+                  onClick={() => {
+                    const slug = prompt('Ingresa el código o identificador del cobro (ej. demo, sharky):');
+                    if (slug) router.push(`/t/${slug.trim()}`);
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-white border border-black/[0.08] text-[#0071e3] font-semibold text-[14px] transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  🔍 Ingresar Código de Cobro
+                </motion.button>
+              )}
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 transition={tactileSpring}

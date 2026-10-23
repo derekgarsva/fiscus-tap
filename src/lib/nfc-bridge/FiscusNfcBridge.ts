@@ -74,6 +74,22 @@ export function isNativeAndroid(): boolean {
 }
 
 /**
+ * Checks if running on iOS (Safari, WebKit, or Native iOS).
+ */
+export function isIos(): boolean {
+  if (!isBrowser()) return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+/**
+ * Checks if running on native iOS with hardware Capacitor support.
+ */
+export function isNativeIos(): boolean {
+  return isBrowser() && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
+}
+
+/**
  * Safe, non-throwing check of NFC capabilities.
  */
 export async function checkNfcCapabilities(): Promise<NfcStatus> {

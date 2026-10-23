@@ -4,6 +4,8 @@ export const motionTokens = {
     fast: 0.15,
     standard: 0.25,
     slow: 0.4,
+    enter: 0.2,
+    exit: 0.15,
   },
   ease: {
     standard: [0.2, 0, 0, 1] as const,

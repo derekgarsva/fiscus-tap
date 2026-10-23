@@ -29,13 +29,54 @@ body {
   background-color: #fbfbfd;
 }
 
-/* Mobile Safe-Area Utilities */
+/* iOS Safe-Area Utilities (Notch, Dynamic Island, Home Indicator) */
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
 }
 
 .pt-safe {
   padding-top: max(env(safe-area-inset-top, 0px), 16px);
+}
+
+.pl-safe {
+  padding-left: max(env(safe-area-inset-left, 0px), 16px);
+}
+
+.pr-safe {
+  padding-right: max(env(safe-area-inset-right, 0px), 16px);
+}
+
+/* iOS Safari: Prevent automatic zoom on input focus when font-size < 16px */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Apple Tap highlight and Touch Ergonomics */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select {
+  touch-action: manipulation;
+}
+
+/* Smooth momentum scrolling for iOS containers */
+.overflow-y-auto,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Disable iOS long-press callout on interactive elements */
+button,
+a {
+  -webkit-touch-callout: none;
 }
 
 /* Subtle Apple minimalist scrollbar */
@@ -59,11 +100,6 @@ body {
   color: #0071e3;
 }
 
-/* Apple tap highlight reset */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
 /* Keyframe for Apple NFC Pulse */
 @keyframes applePulse {
   0% {
@@ -83,13 +119,3 @@ body {
 .animate-apple-pulse {
   animation: applePulse 2.4s ease-in-out infinite;
 }
-
-/* Mobile Safe-Area Utilities */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
